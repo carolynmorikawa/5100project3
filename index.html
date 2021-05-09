@@ -1,1 +1,112 @@
 
+<!DOCTYPE HTML>
+
+<html lang="en">
+    <div class = "title">
+    <h1> Vegetarian & Vegan</h1>
+    <h3>INFO 5100</h3>
+    </div>
+<head>
+    <title>Project 2</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <style>
+    
+    h1{
+          padding-top: 100;
+          padding-bottom:100;
+          font-size: 50;
+          text-align: center;
+          font-family: 'Arial';
+          color:white;
+          font-weight: bolder;
+          background-color: navy;
+      }
+      .title {
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 50;
+        }
+
+        .map_positioning{
+            width:50%;
+            display: block;
+            margin-left: 400px;
+            margin-right: 400px;
+            padding:10px;
+            margin-right: 200px;
+            outline: solid 1px black;
+            background-color:white;
+        }
+
+        </style>
+        </head>
+
+            <div class="map_positioning">
+    <svg id="us_map" height="800" width="1000"></svg>
+    </div>
+<script>
+  const svg = d3.select("#us_map");
+  const width = svg.attr("width");
+  const height = svg.attr("height");
+  const margin = { top: 20, right: 20, bottom: 20, left:20};
+  const mapWidth = width - margin.left - margin.right;
+  const mapHeight = height - margin.top - margin.bottom;
+  const map = svg.append("g")
+                  .attr("transform","translate("+margin.left+","+margin.top+")");
+
+    const requestData = async () => {
+
+
+        //***LOAD DATASET
+        var data = await d3.csv("Datafiniti_Vegetarian_and_Vegan_Restaurants.csv");
+        console.log(data)
+    
+
+        // //LOAD AND DISPLAY MAP DATA
+        var us = await d3.json("us_map.json");
+        console.log(us)
+        var states = topojson.feature(us, us.objects.states);
+        var statesMesh = topojson.mesh(us, us.objects.states);
+        var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], states);
+        var path = d3.geoPath().projection(projection);
+        console.log(statesMesh);
+
+   
+    // 2c. Draw states and outlines
+    map.selectAll("path.state").data(states.features)
+       .join("path")
+       .attr("class", "state")
+       .attr("fill","none")
+       .attr("note", d => d.id)
+       .attr("d", path);
+  
+    map.append("path").datum(statesMesh)
+       .attr("class","outline")
+       .attr("fill","none")
+       .style("stroke-width", 3)
+        .style("stroke", "black")
+       .attr("d", path);
+
+    data.forEach( d => {
+            d.latitude = Number(d.latitude);
+            d.longitude = Number(d.longitude);
+            d.position = projection( [d.longitude, d.latitude] );
+
+        });
+        console.log(data);
+
+    let circles = map.selectAll("circle.dot").data(data)
+                                .join("circle")
+                                .attr("class","dot")
+                                .attr("r", 5)
+                                .attr("fill", "blue")
+                                .attr("opacity", 0.6)
+                                .attr("cx", d => d.position[0])
+                                .attr("cy", d => d.position[1]);
+    
+    }
+    requestData();
+</script>
+        </html>
+   
